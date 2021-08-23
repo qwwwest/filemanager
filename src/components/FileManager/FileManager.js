@@ -108,15 +108,15 @@ class FileManager extends React.Component {
         const checked = this.state.selection.indexOf(item.name) !== -1
             || this.state.copied.indexOf(item.name) !== -1;
         return <tr key={index + item.name} id={item.name}>
-            <td><input type="checkbox" name="" id={index} onChange={this.toggle}
-                checked={checked} /></td>
+            <td>{this.state.copied.length === 0 || this.state.path === this.state.from ? <input type="checkbox" name="" id={index} onChange={this.toggle}
+                checked={checked} /> : null} </td>
             <td className={item.name.match(/.(jpg|jpeg|png|gif)$/i) ? 'hasImg' : null}>{item.isDir ? <Folder /> :
                 item.name.match(/.(jpg|jpeg|png|gif)$/i) ?
                     <div>
                         <img className='thumb' src={item.url} alt={item.name} />
                         <span><ImagePreview image={item} /></span>
                     </div> : null} </td>
-            <td>{item.isDir ? <a href="#"
+            <td>{item.isDir ? <a href="#0"
                 onClick={this.action}
                 title={"cd " + item.name}
                 data-cmd="cd"
@@ -126,10 +126,10 @@ class FileManager extends React.Component {
             <td>{item.filesize}</td>
             <td>
                 <span className="actions">
-                    <a href="#" onClick={this.rm}
+                    <a href="#0" onClick={this.rm}
                         title={"rm " + item.name}
                         data-params={item.name}>delete</a> &nbsp;
-                    <a href="#" onClick={this.mv} data-params={item.name}>rename</a> &nbsp;
+                    <a href="#0" onClick={this.mv} data-params={item.name}>rename</a> &nbsp;
                 </span>
             </td></tr >
     }
@@ -162,17 +162,6 @@ class FileManager extends React.Component {
         const files = this.state.ls.files.map(f => f.name);
         this.setState({ selection: [...folders, ...files] });
 
-        // if (cb.checked) {
-        //     this.setState({ selection: [...this.state.selection, cb.parentElement.parentElement.id] });
-        //     //this.state.selection.push();
-        // } else {
-        //     const index = this.state.selection.indexOf(cb.parentElement.parentElement.id);
-        //     if (index > -1) {
-        //         let selection = [...this.state.selection];
-        //         selection.splice(index, 1);
-        //         this.setState({ "selection": selection });
-        //     }
-        // }
     }
     upload = (e) => {
         e.preventDefault();
@@ -241,13 +230,30 @@ class FileManager extends React.Component {
 
     }
 
+    mvMultiple = (e) => {
+        e.preventDefault();
+        if (this.state.path === this.state.from) return;
+        let files = this.state.copied.map(file => this.state.from + '/' + file);
+        this.fetchData('mvMultiple', this.state.path, files);
+        this.setState({ copied: [] });
+    }
+
+    copyMultiple = (e) => {
+        e.preventDefault();
+        if (this.state.path === this.state.from) return;
+
+
+        let files = this.state.copied.map(file => this.state.from + '/' + file);
+        this.fetchData('copyMultiple', this.state.path, files);
+        this.setState({ copied: [] });
+    }
+
     cancel_multi = (e) => {
         e.preventDefault();
         this.setState({ copied: [] });
 
 
     }
-
 
 
     setFiles = (files) => {
@@ -278,12 +284,24 @@ class FileManager extends React.Component {
                 },
             });
             return <ThemeProvider theme={darkTheme}>
-                <SignIn onSubmit={this.login} message={this.state.message} />
+                <SignIn onSubmit={this.login} message={this.state.message || "(login: user , password: user)"} />
             </ThemeProvider>
 
 
         }
 
+        let isDestinationFolderValid = this.state.copied.length && this.state.path !== this.state.from;
+
+        if (isDestinationFolderValid) {
+            let i = 0;
+            for (; i < this.state.copied.length; i++) {
+                const file = this.state.from + this.state.copied[i];
+                console.log(file, this.state.path);
+                if (this.state.path.startsWith(file)) break;
+            }
+            isDestinationFolderValid = (i === this.state.copied.length);
+
+        }
         return (
             <div>
                 <div className="message">{this.state.message}</div>
@@ -302,7 +320,7 @@ class FileManager extends React.Component {
                         {//onClick={this.cd} data-cmd="cd" data-params={item.name}
                             this.state.path !== '/' ? <tr id='..'>
                                 <td></td>
-                                <td> <a href="#" onClick={this.action}
+                                <td> <a href="#0" onClick={this.action}
                                     data-cmd="cd"
                                     data-params={'..'}
                                     title={"cd .."}>..</a>  </td>
@@ -315,37 +333,45 @@ class FileManager extends React.Component {
                         {ls.folders ? ls.folders.map(this.line) : null}{ls.files ? ls.files.map(this.line) : null}</tbody>
 
                     <tfoot><tr className="actions">
-                        <td colSpan="4">
+                        <td colSpan="6">
 
-                            <a href="#" onClick={this.mkdir}>Create Folder</a>
-                            <a href="#" onClick={this.selectAll}>Select ALL</a>
+                            <a href="#0" onClick={this.mkdir}>Create Folder</a>
+                            <a href="#0" onClick={this.selectAll}>Select ALL</a>
 
                             {this.state.copied.length ? <React.Fragment>
-                                <a href="#" onClick={this.cancel_multi}>cancel</a>
+
 
                                 {this.state.from !== '' ? <React.Fragment>
 
-                                    <a href="#" onClick={this.cd}>move</a>
-                                    <a href="#" onClick={this.cd}>paste</a>
-                                    <a href="#" onClick={this.rm}>delete</a>
+
+
+                                    <a href="#0" onClick={this.rm}>delete</a>
                                 </React.Fragment> : ''}
 
                             </React.Fragment>
                                 : (
                                     this.state.selection.length ?
-                                        <>  <a href="#" onClick={this.copy}>copy</a>
-                                            <a href="#" onClick={this.rm}>delete</a>
+                                        <>  <a href="#0" onClick={this.copy}>copy</a>
+                                            <a href="#0" onClick={this.rm}>delete</a>
                                         </> : ''
                                 )}
                         </td></tr>
                     </tfoot>
 
                 </table>
-                <DropZone title="Drop Zone" files={this.state.files}
-                    setFiles={this.setFiles} upload={this.upload} />
+
                 <span className="actions">
-                    {this.state.copied.length ? <div>copied files from {this.state.from}:
-                        <ul>{this.state.copied.map(this.li)}</ul>  </div> : null}
+                    {this.state.copied.length ? <div> files in the Clipboard from "{this.state.from}":
+                        <ul>{this.state.copied.map(this.li)}</ul>
+                        <a href="#0" onClick={this.cancel_multi}>clear</a>
+                        {isDestinationFolderValid ?
+                            <><a href="#0" onClick={this.mvMultiple}>move {this.state.copied.length} file{this.state.copied.length === 1 ? '' : 's'} in {this.state.path}  </a>
+                                <a href="#0" onClick={this.copyMultiple}>copy {this.state.copied.length} file{this.state.copied.length === 1 ? '' : 's'} in {this.state.path}  </a>
+                            </> : null
+                        }
+
+                    </div> : <DropZone title="Drop Zone" files={this.state.files}
+                        setFiles={this.setFiles} upload={this.upload} />}
 
                 </span>
 

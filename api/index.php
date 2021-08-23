@@ -1,10 +1,13 @@
 <?php
 
-
+// This it the folder to use with the filemanager
 $ROOT = "../root";
 $ROOT = realpath($ROOT);
 
+// These are the users who can log in. 
+// this is for testing purposes only. More security should be added for real life application.
 $USERS = [
+    ['user' => 'user', 'password' => 'user'],
     ['user' => 'dev', 'password' => 'dev'],
     ['user' => 'nelly', 'password' => 'plop'],
     ['user' => 'johndoe', 'password' => 'wqszdeaztRedfdc'],
@@ -227,6 +230,93 @@ class FM
         else
             $this->error = "$oldName could not be renamed";
     }
+
+
+    function mvMultiple()
+    {
+        $success = 0;
+        $failed = 0;
+
+
+        for ($i = 0; $i < count($this->params); $i++) {
+            $name = $this->params[$i];
+            if (!$this->_isValidFileName($name)) {
+                $this->error = 'No valid name: ' . $name;
+                return;
+            }
+
+
+            if (!file_exists($this->realRoot  . '/' . $name)) {
+                $this->error = $name . ' does not exist';
+                return;
+            }
+
+
+            if (rename($this->realRoot  . '/' . $name, $this->realPath . '/' . basename($name)))
+                $success++;
+            else
+                $failed++;
+        }
+
+        $this->message =  "$success file(s) moved" . ($failed) ? " $failed failed." : "";
+        $this->error = ($failed) ? " $failed move failed." : "";
+    }
+
+    function copyMultiple()
+    {
+        $success = 0;
+        $failed = 0;
+
+
+        for ($i = 0; $i < count($this->params); $i++) {
+            $name = $this->params[$i];
+            if (!$this->_isValidFileName($this->realRoot  . '/' . $name)) {
+                $this->error = 'No valid name: ' . $name;
+                return;
+            }
+
+
+            if (!file_exists($this->realRoot  . '/' . $name)) {
+                $this->error = $name . ' does not exist';
+                return;
+            }
+
+
+            if ($this->_copy_r($this->realRoot  . '/' . $name, $this->realPath . '/' . basename($name)))
+                $success++;
+            else
+                $failed++;
+        }
+
+        $this->message =  "$success file(s) moved" . ($failed) ? " $failed failed." : "";
+        $this->error = ($failed) ? " $failed move failed." : "";
+    }
+
+    function _copy_r($path, $dest)
+    {
+        if (is_dir($path)) {
+            @mkdir($dest);
+            $objects = scandir($path);
+            if (sizeof($objects) > 0) {
+                foreach ($objects as $file) {
+                    if ($file == "." || $file == "..")
+                        continue;
+                    // go on
+                    if (is_dir($path . '/' . $file)) {
+                        $this->_copy_r($path . '/' . $file, $dest . '/' . $file);
+                    } else {
+                        copy($path . '/' . $file, $dest . '/' . $file);
+                    }
+                }
+            }
+            return true;
+        } elseif (is_file($path)) {
+            return copy($path, $dest);
+        } else {
+            return false;
+        }
+    }
+
     function rm()
     {
         $success = 0;
