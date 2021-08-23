@@ -2,7 +2,7 @@
 
 function ImagePreview(props) {
 
-    const filename = props.image.filename //.replace(/^.*[\\\/]/, '')
+    //const filename = props.image.filename; //.replace(/^.*[\\\/]/, '')
 
     return <div className="imagePreview">
         <img src={props.image.url} alt={props.image.name} />

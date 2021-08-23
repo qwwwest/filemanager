@@ -11,11 +11,12 @@ function BreadCrump(props) {
         {path.map((part, index) => {
             str += '/' + part;
             if (index === 0) return <span key={index + part}>
-                <a href="#"
+                <a href="#" onClick={props.action}
+                    title={'cd ' + str}
                     data-cmd="cd"
                     data-params={str}
-                    title={'cd ' + str}
-                    onClick={props.action}> <HomeIcon /> </a>
+
+                > <HomeIcon /> </a>
             </span>
             return <span key={index + part}> /
                 <a href="#" onClick={props.action}

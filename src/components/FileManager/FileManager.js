@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import BreadCrump from './Breadcrumb';
 import ImagePreview from './ImagePreview';
 import DropZone from './DropZone';
+import SignIn from '../ui/SignIn';
 import './FileManager.css';
 import { API } from '../../App';
 import Folder from '@material-ui/icons/Folder';
+import { ThemeProvider } from '@material-ui/core'
+import { createTheme } from '@material-ui/core/styles'
 
 
 class FileManager extends React.Component {
@@ -13,8 +16,10 @@ class FileManager extends React.Component {
         this.state = {
             error: null,
             isLoaded: false,
+            isConnected: false,
             ls: [],
             path: '/',
+            from: '',
             copied: [],
             selection: [],
             files: []
@@ -22,7 +27,7 @@ class FileManager extends React.Component {
 
 
     }
-    x
+
     postData = async (url = '', data = {}) => {
 
         let formData = new FormData();
@@ -62,22 +67,21 @@ class FileManager extends React.Component {
 
     fetchData = (cmd, path, params) => {
 
-
-
-        //'params[]': params
         this.postData(API, { cmd, path, params })
             .then(
                 (data) => {
-
-                    const files = (cmd === 'upload') ? [] : [... this.state.files];
+                    console.log(data);
+                    const files = (cmd === 'upload') ? [] : [...this.state.files];
                     this.setState({
                         isLoaded: true,
+                        isConnected: data.isLogged,
                         ls: data.ls,
                         path: data.path,
                         message: data.message,
                         error: data.error,
+                        from: this.state.from,
                         selection: [],
-                        copied: [... this.state.copied],
+                        copied: [...this.state.copied],
                         files
                     });
                 },
@@ -98,9 +102,14 @@ class FileManager extends React.Component {
     componentDidMount() {
         this.fetchData('ls', this.state.path, []);
     }
+    li = (item) => <li>{item}</li>;
     line = (item, index) => {
+
+        const checked = this.state.selection.indexOf(item.name) !== -1
+            || this.state.copied.indexOf(item.name) !== -1;
         return <tr key={index + item.name} id={item.name}>
-            <td><input type="checkbox" name="" id={index} onChange={this.toggle} /></td>
+            <td><input type="checkbox" name="" id={index} onChange={this.toggle}
+                checked={checked} /></td>
             <td className={item.name.match(/.(jpg|jpeg|png|gif)$/i) ? 'hasImg' : null}>{item.isDir ? <Folder /> :
                 item.name.match(/.(jpg|jpeg|png|gif)$/i) ?
                     <div>
@@ -136,16 +145,42 @@ class FileManager extends React.Component {
         } else {
             const index = this.state.selection.indexOf(cb.parentElement.parentElement.id);
             if (index > -1) {
-                let selection = [... this.state.selection];
+                let selection = [...this.state.selection];
                 selection.splice(index, 1);
                 this.setState({ "selection": selection });
             }
         }
     }
+    selectAll = (e) => {
+        e.preventDefault();
 
+        if (this.state.selection.length) {
+            this.setState({ selection: [] });
+            return;
+        }
+        const folders = this.state.ls.folders.map(f => f.name);
+        const files = this.state.ls.files.map(f => f.name);
+        this.setState({ selection: [...folders, ...files] });
+
+        // if (cb.checked) {
+        //     this.setState({ selection: [...this.state.selection, cb.parentElement.parentElement.id] });
+        //     //this.state.selection.push();
+        // } else {
+        //     const index = this.state.selection.indexOf(cb.parentElement.parentElement.id);
+        //     if (index > -1) {
+        //         let selection = [...this.state.selection];
+        //         selection.splice(index, 1);
+        //         this.setState({ "selection": selection });
+        //     }
+        // }
+    }
     upload = (e) => {
         e.preventDefault();
         this.fetchData('upload', this.state.path, []);
+    }
+    logout = (e) => {
+        e.preventDefault();
+        this.fetchData('logout', this.state.path, []);
     }
     cd = (e) => {
         e.preventDefault();
@@ -155,7 +190,11 @@ class FileManager extends React.Component {
 
     copy = (e) => {
         e.preventDefault();
-        this.setState({ selection: [], copied: [... this.state.selection] });
+        this.setState({
+            selection: [],
+            from: this.state.path,
+            copied: [...this.state.selection]
+        });
     }
 
 
@@ -215,80 +254,105 @@ class FileManager extends React.Component {
         this.setState({ files: [...files] });
     }
 
+    login = (login, password) => {
+
+        this.fetchData('login', this.state.path, [login, password]);
+    }
+
 
     render() {
-        const { error, isLoaded, ls, message, files } = this.state;
+        const { error, isLoaded, ls, isConnected } = this.state;
 
 
-        console.log(ls);
         if (error) setTimeout(() => { alert(error) }, 500)
-        if (this.state.message) setTimeout(() => { this.setState({ message: '' }) }, 3000);
 
         if (!isLoaded) {
             return <div>Loading...</div>;
-        } else {
+        }
+        if (this.state.message) setTimeout(() => { this.setState({ message: '' }) }, 3000);
 
-            return (
-                <div>
-                    <div className="message">{this.state.message}</div>
-                    <h1><BreadCrump path={this.state.path} action={this.action} /></h1>
+        if (!isConnected) {
+            const darkTheme = createTheme({
+                palette: {
+                    type: 'dark',
+                },
+            });
+            return <ThemeProvider theme={darkTheme}>
+                <SignIn onSubmit={this.login} message={this.state.message} />
+            </ThemeProvider>
+
+
+        }
+
+        return (
+            <div>
+                <div className="message">{this.state.message}</div>
+                <button className="logout" onClick={this.logout}>Logout</button>
+                <h1><BreadCrump path={this.state.path} action={this.action} /></h1>
 
 
 
 
 
-                    <table>
-                        <thead><tr>
-                            <td> <input type="checkbox" name="" id={0} onChange={this.toggle} /> </td><td>  </td><td >Name</td><td>Date</td><td>Size</td><td>Actions</td></tr></thead>
+                <table>
+                    <thead><tr>
+                        <td> </td><td>  </td><td >Name</td><td>Date</td><td>Size</td><td>Actions</td></tr></thead>
 
-                        <tbody>
-                            {//onClick={this.cd} data-cmd="cd" data-params={item.name}
-                                this.state.path !== '/' ? <tr id='..'>
-                                    <td></td>
-                                    <td> <a href="#" onClick={this.action}
-                                        data-cmd="cd"
-                                        data-params={'..'}
-                                        title={"cd .."}>..</a>  </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>
-                                    </td></tr>
-                                    : null
-                            }
-                            {ls.folders ? ls.folders.map(this.line) : null}{ls.files ? ls.files.map(this.line) : null}</tbody>
+                    <tbody>
+                        {//onClick={this.cd} data-cmd="cd" data-params={item.name}
+                            this.state.path !== '/' ? <tr id='..'>
+                                <td></td>
+                                <td> <a href="#" onClick={this.action}
+                                    data-cmd="cd"
+                                    data-params={'..'}
+                                    title={"cd .."}>..</a>  </td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                </td></tr>
+                                : null
+                        }
+                        {ls.folders ? ls.folders.map(this.line) : null}{ls.files ? ls.files.map(this.line) : null}</tbody>
 
-                        <tfoot><tr className="actions">
-                            <td colSpan="4">
+                    <tfoot><tr className="actions">
+                        <td colSpan="4">
 
-                                <a href="#" onClick={this.mkdir}>Create Folder</a>
+                            <a href="#" onClick={this.mkdir}>Create Folder</a>
+                            <a href="#" onClick={this.selectAll}>Select ALL</a>
 
-                                {this.state.copied.length ? <React.Fragment>
-                                    <a href="#" onClick={this.cancel_multi}>cancel</a>
+                            {this.state.copied.length ? <React.Fragment>
+                                <a href="#" onClick={this.cancel_multi}>cancel</a>
+
+                                {this.state.from !== '' ? <React.Fragment>
 
                                     <a href="#" onClick={this.cd}>move</a>
                                     <a href="#" onClick={this.cd}>paste</a>
+                                    <a href="#" onClick={this.rm}>delete</a>
+                                </React.Fragment> : ''}
 
-                                </React.Fragment>
-                                    : (
-                                        this.state.selection.length ?
-                                            <>  <a href="#" onClick={this.copy}>copy</a>
-                                                <a href="#" onClick={this.rm}>delete</a>
-                                            </> : ''
-                                    )}
-                            </td></tr>
-                        </tfoot>
+                            </React.Fragment>
+                                : (
+                                    this.state.selection.length ?
+                                        <>  <a href="#" onClick={this.copy}>copy</a>
+                                            <a href="#" onClick={this.rm}>delete</a>
+                                        </> : ''
+                                )}
+                        </td></tr>
+                    </tfoot>
 
-                    </table>
-                    <span className="actions">
-                        {this.state.copied.length ? <div>copied:{this.state.copied} </div> : null}
-                        {this.state.selection.length ? <div>selection:{this.state.selection} </div> : null}
-                    </span>
-                    <DropZone title="Drop Zone" files={this.state.files}
-                        setFiles={this.setFiles} upload={this.upload} />
-                </div >
+                </table>
+                <DropZone title="Drop Zone" files={this.state.files}
+                    setFiles={this.setFiles} upload={this.upload} />
+                <span className="actions">
+                    {this.state.copied.length ? <div>copied files from {this.state.from}:
+                        <ul>{this.state.copied.map(this.li)}</ul>  </div> : null}
 
-            );
-        }
+                </span>
+
+            </div >
+
+        );
+
     }
 }
 

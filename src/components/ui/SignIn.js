@@ -161,6 +161,7 @@ export default function SignIn(props) {
           </Button>
 
         </form>
+        {props.message}
       </div>
 
     </Container>

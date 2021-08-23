@@ -1,18 +1,25 @@
 <?php
 
 
-$ROOT = "../../___test";
+$ROOT = "../root";
 $ROOT = realpath($ROOT);
+
+$USERS = [
+    ['user' => 'dev', 'password' => 'dev'],
+    ['user' => 'nelly', 'password' => 'plop'],
+    ['user' => 'johndoe', 'password' => 'wqszdeaztRedfdc'],
+];
 
 class FM
 {
     public string $realRoot;
 
-    public string $path;
+    public string $path = '/';
     public string $command;
     public array $params;
     public array $ls;
     public string $message = '';
+    public bool $isLogged = false;
     public string $error = '';
     public string $realPath;
 
@@ -22,15 +29,21 @@ class FM
         $root = $ROOT;
         //  if (isset($_POST['submit'])) {
         //$vars = json_decode(file_get_contents('php://input'), true);
-        $vars = $_POST;
-        $c = $vars['cmd'] ?? 'ls';
 
-        $this->params = $vars['params'] ?? [];
+        $c = $_POST['cmd'] ?? 'ls';
+
+        $this->params = $_POST['params'] ?? [];
+        if (!$this->_checkIsLogged()) {
+
+            $this->_response();
+            exit();
+        }
+
 
         $this->realRoot  = realpath($root);
         $this->realPath  = $this->realRoot;
 
-        if (!$this->_changePath($vars['path'] ?? '/')) {
+        if (!$this->_changePath($_POST['path'] ?? '/')) {
             $this->error = 'No valid Path';
             $this->path = '/';
             $this->_response();
@@ -41,6 +54,40 @@ class FM
         }
 
         $this->_response();
+    }
+
+    function _checkIsLogged()
+    {
+        global $USERS;
+        session_start();
+        $this->isLogged = false;
+        if (isset($_SESSION['isLogged'])) {
+            return $this->isLogged = true;
+        }
+        if ($_POST['cmd'] !== 'login') {
+            return false;
+        }
+
+        $login = $this->params[0] ?? false;
+        $password = $this->params[1] ?? false;
+        if (!$login || !$password) {
+            $this->message = 'No valid User';
+            return false;
+        }
+        for ($i = 0; $i < count($USERS); $i++) {
+            if ($USERS[$i]['user'] === $login && $USERS[$i]['password'] === $password)
+                return $_SESSION['isLogged'] = $this->isLogged = true;
+        }
+
+        $this->message = 'No valid User';
+        return false;
+    }
+
+    function logout()
+    {
+        session_destroy();
+        $this->path = '/';
+        $this->isLogged = false;
     }
     function upload()
     {
@@ -241,7 +288,9 @@ class FM
 
         $response = [];
         $response['path'] = $this->path;
-        $response['ls'] = $this->_ls();
+        $response['isLogged'] = $this->isLogged;
+        if ($this->isLogged) $response['ls'] = $this->_ls();
+
         if ($this->error) $response['error'] = $this->error;
         if ($this->message) $response['message'] = $this->message;
         exit(json_encode($response, JSON_PRETTY_PRINT));
