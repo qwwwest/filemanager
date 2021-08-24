@@ -52,8 +52,9 @@ class FM
             $this->_response();
         }
 
-        if (is_callable(array($this, $c)) && strpos($c, '_') !== 0) {
-            $this->{$c}();
+        //  if (is_callable(array($this, $c)) && strpos($c, '_') !== 0) {
+        if (is_callable(array($this, 'command_' . $c))) {
+            $this->{'command_' . $c}();
         }
 
         $this->_response();
@@ -86,13 +87,13 @@ class FM
         return false;
     }
 
-    function logout()
+    function command_logout()
     {
         session_destroy();
         $this->path = '/';
         $this->isLogged = false;
     }
-    function upload()
+    function command_upload()
     {
         // Count total files
         $countfiles = count($_FILES['file']['name']);
@@ -178,7 +179,7 @@ class FM
         return $this->ls = ["folders" => $folders, "files" => $files];
         // $this->_response();
     }
-    function cd()
+    function command_cd()
     {
 
         $dir =  $this->params[0] ?? '/';
@@ -187,7 +188,7 @@ class FM
         }
     }
 
-    function mkdir()
+    function command_mkdir()
     {
         $folder = $this->params[0];
         if (!$this->_isValidFileName($folder)) {
@@ -205,7 +206,7 @@ class FM
             "$folder was created"
             : "$folder could not be created";
     }
-    function mv()
+    function command_mv()
     {
         $oldName = $this->params[0];
         $newName = $this->params[1];
@@ -232,7 +233,7 @@ class FM
     }
 
 
-    function mvMultiple()
+    function command_mvMultiple()
     {
         $success = 0;
         $failed = 0;
@@ -262,7 +263,7 @@ class FM
         $this->error = ($failed) ? " $failed move failed." : "";
     }
 
-    function copyMultiple()
+    function command_command_copyMultiple()
     {
         $success = 0;
         $failed = 0;
@@ -317,7 +318,7 @@ class FM
         }
     }
 
-    function rm()
+    function command_rm()
     {
         $success = 0;
         $failed = 0;

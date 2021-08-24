@@ -4,7 +4,10 @@
 /node_modules
 /.pnp
 .pnp.js
-/root
+# exclude everything
+/root/*
+# exception to the rule
+!/root/put-your-files-here
 
 # testing
 /coverage
