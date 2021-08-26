@@ -21,11 +21,8 @@ The aim of this project was to develop a webapp to handle files on a remote serv
 
 Runs `npm install` to install the app dependencies.
 in the `api/index.php` file, you can add/edit users in the array $USERS.
-Also, the variable $ROOT is a variable for the root folder to serve the files from.
-
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+(to test without changing $USERS, you can use the login `user` and the password `user`).
+Also, the variable $ROOT is a variable for the root folder to serve the files from. The default value for $ROOT is the forlder `root`.
 
 ## Available Scripts
 
@@ -38,6 +35,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
+Note you must also have a regular Apache running to run the PHP script.
 
 ### `npm run build`
 
