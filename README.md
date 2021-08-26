@@ -20,6 +20,8 @@ The aim of this project was to develop a webapp to handle files on a remote serv
 ### `npm install`
 
 Runs `npm install` to install the app dependencies.
+in the `api/index.php` file, you can add/edit users in the array $USERS.
+Also, the variable $ROOT is a variable for the root folder to serve the files from.
 
 # Getting Started with Create React App
 

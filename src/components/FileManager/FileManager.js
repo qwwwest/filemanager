@@ -40,7 +40,6 @@ class FileManager extends React.Component {
 
         }
         if (this.state.files) {
-
             //Loop through array of file and append form Data
             for (let i = 0; i < this.state.files.length; i++) {
                 const file = this.state.files[i];
