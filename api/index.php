@@ -60,6 +60,7 @@ class FM
         $this->_response();
     }
 
+    // this function check if user is logged-in.
     function _checkIsLogged()
     {
         global $USERS;
@@ -144,7 +145,7 @@ class FM
                 $filesize = ceil(filesize($filename) / 1024) . ' Kb';
                 $info['filesize'] = $filesize;
                 $info['url'] = substr($filename, strlen($_SERVER['DOCUMENT_ROOT']));
-                $imgInfo = getimagesize($filename);
+                $imgInfo = @getimagesize($filename);
                 if ($imgInfo !== false) {
                     list($width, $height, $type, $attr) = $imgInfo;
                     $imageTypeArray = array(
@@ -206,7 +207,7 @@ class FM
             "$folder was created"
             : "$folder could not be created";
     }
-    function command_mv()
+    function command_rename()
     {
         $oldName = $this->params[0];
         $newName = $this->params[1];
@@ -233,7 +234,7 @@ class FM
     }
 
 
-    function command_mvMultiple()
+    function command_moveMultiple()
     {
         $success = 0;
         $failed = 0;
@@ -263,7 +264,7 @@ class FM
         $this->error = ($failed) ? " $failed move failed." : "";
     }
 
-    function command_command_copyMultiple()
+    function command_copyMultiple()
     {
         $success = 0;
         $failed = 0;

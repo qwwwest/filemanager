@@ -6,7 +6,7 @@ function BreadCrump(props) {
     const paths = props.path;
     const path = props.path.split('/');
     let str = '';
-
+    const plop = (e) => { alert('YES') };
     return <div>
         {path.map((part, index) => {
             str += '/' + part;
@@ -14,9 +14,9 @@ function BreadCrump(props) {
                 <a href="#" onClick={props.action}
                     title={'cd ' + str}
                     data-cmd="cd"
-                    data-params={str}
+                    data-params={'/'}
 
-                > <HomeIcon /> </a>
+                > <HomeIcon /> home</a>
             </span>
             return <span key={index + part}> /
                 <a href="#" onClick={props.action}

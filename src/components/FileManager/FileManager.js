@@ -129,7 +129,7 @@ class FileManager extends React.Component {
                     <a href="#0" onClick={this.rm}
                         title={"rm " + item.name}
                         data-params={item.name}>delete</a> &nbsp;
-                    <a href="#0" onClick={this.mv} data-params={item.name}>rename</a> &nbsp;
+                    <a href="#0" onClick={this.rename} data-params={item.name}>rename</a> &nbsp;
                 </span>
             </td></tr >
     }
@@ -189,8 +189,9 @@ class FileManager extends React.Component {
 
     action = (e) => {
         e.preventDefault();
-        const cmd = e.target.dataset.cmd;
-        const params = (e.target.dataset.params || '').split(' ');
+        const cmd = e.currentTarget.dataset.cmd;
+        const params = (e.currentTarget.dataset.params || '').split(' ');
+
         this.fetchData(cmd, this.state.path, params);
     }
     rm = (e) => {
@@ -219,22 +220,22 @@ class FileManager extends React.Component {
 
     }
 
-    mv = (e) => {
+    rename = (e) => {
         e.preventDefault();
         let newName = prompt("New name:", e.target.dataset.params);
         const params = e.target.dataset.params;
         if (newName) {
-            this.fetchData('mv', this.state.path, [params, newName]);
+            this.fetchData('rename', this.state.path, [params, newName]);
         }
 
 
     }
 
-    mvMultiple = (e) => {
+    moveMultiple = (e) => {
         e.preventDefault();
         if (this.state.path === this.state.from) return;
         let files = this.state.copied.map(file => this.state.from + '/' + file);
-        this.fetchData('mvMultiple', this.state.path, files);
+        this.fetchData('moveMultiple', this.state.path, files);
         this.setState({ copied: [] });
     }
 
@@ -351,8 +352,8 @@ class FileManager extends React.Component {
                             </React.Fragment>
                                 : (
                                     this.state.selection.length ?
-                                        <>  <a href="#0" onClick={this.copy}>copy</a>
-                                            <a href="#0" onClick={this.rm}>delete</a>
+                                        <>  <a href="#0" onClick={this.copy}>copy selected files in Clipboard</a>
+                                            <a href="#0" onClick={this.rm}>delete selected files</a>
                                         </> : ''
                                 )}
                         </td></tr>
@@ -365,7 +366,7 @@ class FileManager extends React.Component {
                         <ul>{this.state.copied.map(this.li)}</ul>
                         <a href="#0" onClick={this.cancel_multi}>clear</a>
                         {isDestinationFolderValid ?
-                            <><a href="#0" onClick={this.mvMultiple}>move {this.state.copied.length} file{this.state.copied.length === 1 ? '' : 's'} in {this.state.path}  </a>
+                            <><a href="#0" onClick={this.moveMultiple}>move {this.state.copied.length} file{this.state.copied.length === 1 ? '' : 's'} in {this.state.path}  </a>
                                 <a href="#0" onClick={this.copyMultiple}>copy {this.state.copied.length} file{this.state.copied.length === 1 ? '' : 's'} in {this.state.path}  </a>
                             </> : null
                         }
